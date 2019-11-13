@@ -10,28 +10,18 @@ function base64(filename, data) {
     extname = "svg+xml"
   }
   
-  return 'data:image/' + extname + ';base64,' + data.toString('base64');
+  return 'data:image/' + extname.toLowerCase() + ';base64,' + data.toString('base64');
 }
 
 function img(data) {
   var reg = /^data:image\/([\w+]+);base64,([\s\S]+)/;
   var match = data.match(reg);
-  var baseType = {
-    jpeg: 'jpg'
-  };
-
-  baseType['svg+xml'] = 'svg'
 
   if (!match) {
     throw new Error('image base64 data error');
   }
 
-  var extname = baseType[match[1]] ? baseType[match[1]] : match[1];
-
-  return {
-    extname: '.' + extname,
-    base64: match[2]
-  };
+  return match[2];
 }
 
 /**
@@ -91,11 +81,10 @@ exports.requestBase64 = function(url, callback) {
  * @example
  * base64Img.img('data:image/png;base64,...', 'dest', '1', function(err, filepath) {});
  */
-exports.img = function(data, destpath, name, callback) {
-  var result = img(data);
-  var filepath = path.join(destpath, name + result.extname);
+exports.img = function(data, filepath, callback) {
+  var file = img(data);
 
-  fs.writeFile(filepath, result.base64, { encoding: 'base64' }, function(err) {
+  fs.writeFile(filepath, file, { encoding: 'base64' }, function(err) {
     callback(err, filepath);
   });
 };
@@ -106,10 +95,9 @@ exports.img = function(data, destpath, name, callback) {
  * @example
  * var filepath = base64Img.imgSync('data:image/png;base64,...', 'dest', '1');
  */
-exports.imgSync = function(data, destpath, name) {
-  var result = img(data);
-  var filepath = path.join(destpath, name + result.extname);
+exports.imgSync = function(data, filepath) {
+  var file = img(data);
 
-  fs.writeFileSync(filepath, result.base64, { encoding: 'base64' });
+  fs.writeFileSync(filepath, file, { encoding: 'base64' });
   return filepath;
 };
